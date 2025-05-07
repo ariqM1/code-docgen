@@ -1,7 +1,21 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react from "@vitejs/plugin-react";
+import dotenv from "dotenv";
+import { defineConfig } from "vite";
 
-// https://vite.dev/config/
+// Load env variables
+dotenv.config();
+
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-})
+	plugins: [react()],
+	server: {
+		port: 3000,
+	},
+	define: {
+		// Make env variables available to client-side code
+		"process.env.AWS_REGION": JSON.stringify(process.env.AWS_REGION),
+		"process.env.BEDROCK_MODEL_ID": JSON.stringify(
+			process.env.BEDROCK_MODEL_ID
+		),
+	},
+});

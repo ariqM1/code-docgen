@@ -1,16 +1,24 @@
 import { ChatBedrock } from "@langchain/community/chat_models/bedrock";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { modelId, validateAwsConfig } from "../utils/awsConfig";
 
-// This is a placeholder for now - in a real app, you'd need to set up AWS credentials
-const REGION = "us-east-1";
-const BEDROCK_MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0";
-
-// Initialize the Bedrock model
+// Initialize the Bedrock model with proper configuration
 export const initializeModel = () => {
+	// Check if AWS is properly configured
+	if (!validateAwsConfig()) {
+		throw new Error(
+			"AWS configuration is incomplete. Please check your .env file."
+		);
+	}
+
 	return new ChatBedrock({
-		region: REGION,
-		model: BEDROCK_MODEL_ID,
+		model: modelId,
+		region: process.env.AWS_REGION || "us-east-1",
+		credentials: {
+			accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+		},
 		maxTokens: 4096,
 	});
 };

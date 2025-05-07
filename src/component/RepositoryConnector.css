@@ -1,0 +1,164 @@
+.repository-connector {
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 2rem;
+	background-color: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+		"Helvetica Neue", Arial, sans-serif;
+}
+
+/* Form styling */
+.repository-connector h2 {
+	margin-top: 0;
+	color: #333;
+	font-size: 1.8rem;
+}
+
+.repository-connector p {
+	color: #666;
+	margin-bottom: 1.5rem;
+}
+
+.input-group {
+	display: flex;
+	margin-bottom: 1rem;
+}
+
+.repo-input {
+	flex: 1;
+	padding: 0.75rem 1rem;
+	font-size: 1rem;
+	border: 1px solid #ddd;
+	border-radius: 4px 0 0 4px;
+	outline: none;
+}
+
+.repo-input:focus {
+	border-color: #4a90e2;
+	box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.connect-button {
+	padding: 0.75rem 1.5rem;
+	background-color: #4a90e2;
+	color: white;
+	font-size: 1rem;
+	font-weight: bold;
+	border: none;
+	border-radius: 0 4px 4px 0;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.connect-button:hover {
+	background-color: #3a80d2;
+}
+
+.connect-button:disabled {
+	background-color: #a0c1e8;
+	cursor: not-allowed;
+}
+
+.error-message {
+	color: #e74c3c;
+	font-size: 0.9rem;
+	margin-bottom: 1rem;
+	padding: 0.5rem;
+	background-color: rgba(231, 76, 60, 0.1);
+	border-radius: 4px;
+}
+
+.connection-help {
+	margin-top: 2rem;
+	padding-top: 1rem;
+	border-top: 1px solid #eee;
+}
+
+.connection-help h3 {
+	font-size: 1.2rem;
+	color: #555;
+	margin-bottom: 0.5rem;
+}
+
+.connection-help ul {
+	margin: 0;
+	padding-left: 1.5rem;
+}
+
+.connection-help li {
+	color: #666;
+	margin-bottom: 0.5rem;
+}
+
+/* Repository info styling */
+.repository-info {
+	background-color: #fff;
+}
+
+.repository-info h2 {
+	color: #2c3e50;
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid #ecf0f1;
+	margin-bottom: 1.5rem;
+}
+
+.repository-details {
+	margin-bottom: 2rem;
+}
+
+.repository-details p {
+	margin: 0.5rem 0;
+	font-size: 1.1rem;
+	color: #576574;
+}
+
+.repository-details strong {
+	color: #2c3e50;
+	margin-right: 0.5rem;
+}
+
+.file-preview {
+	margin: 1.5rem 0;
+}
+
+.file-preview h3 {
+	color: #2c3e50;
+	margin-bottom: 1rem;
+	font-size: 1.2rem;
+}
+
+.file-structure {
+	max-height: 300px;
+	overflow-y: auto;
+	background-color: #f8f9fa;
+	padding: 1rem;
+	border-radius: 4px;
+	border: 1px solid #eee;
+}
+
+.file-structure pre {
+	margin: 0;
+	font-family: "Courier New", Courier, monospace;
+	font-size: 0.9rem;
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.reset-button {
+	padding: 0.75rem 1.5rem;
+	background-color: #ecf0f1;
+	color: #34495e;
+	font-size: 1rem;
+	font-weight: bold;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.2s;
+	margin-top: 1rem;
+}
+
+.reset-button:hover {
+	background-color: #dfe6e9;
+}
