@@ -4,12 +4,29 @@ import { useNavigate } from "react-router-dom";
 import BedrockTest from "../component/BedrockTest";
 import "./Dashboard.css";
 
+// Define TypeScript interfaces
+interface FileNode {
+	path: string;
+	type: "file" | "directory";
+	children?: FileNode[];
+}
+
+interface Repository {
+	owner: string;
+	name: string;
+	url: string;
+	description: string | null;
+	defaultBranch: string;
+	fileStructure: FileNode[];
+}
+
 const Dashboard = () => {
 	// State for repository connection
 	const [repoUrl, setRepoUrl] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [repository, setRepository] = useState<any>(null);
+	const [repository, setRepository] = useState<Repository | null>(null);
+	const [isGeneratingDoc, setIsGeneratingDoc] = useState<boolean>(false);
 
 	const navigate = useNavigate();
 
@@ -37,11 +54,12 @@ const Dashboard = () => {
 
 			// Check for success
 			if (response.data.success) {
-				setRepository(response.data.repository);
-				console.log(
-					"Connected to repository:",
-					response.data.repository
-				);
+				const repo = response.data.repository;
+				setRepository(repo);
+				console.log("Connected to repository:", repo);
+
+				// Store repository in session storage for use in documentation view
+				sessionStorage.setItem("repository", JSON.stringify(repo));
 			} else {
 				throw new Error(
 					response.data.error || "Failed to connect to repository"
@@ -59,14 +77,34 @@ const Dashboard = () => {
 		}
 	};
 
+	// Generate documentation
+	const generateDocumentation = async () => {
+		if (!repository) return;
+
+		try {
+			setIsGeneratingDoc(true);
+			setError(null);
+
+			// Navigate to documentation view
+			// The actual generation will happen in the DocumentationView component
+			navigate("/documentation");
+		} catch (error: any) {
+			console.error("Error navigating to documentation view:", error);
+			setError("Failed to navigate to documentation view");
+			setIsGeneratingDoc(false);
+		}
+	};
+
 	// Reset connection to try another repository
 	const resetConnection = () => {
 		setRepository(null);
 		setRepoUrl("");
+		// Clear from session storage
+		sessionStorage.removeItem("repository");
 	};
 
 	// Count files in the repository structure
-	const countFiles = (fileStructure: any[]) => {
+	const countFiles = (fileStructure: FileNode[] | undefined): number => {
 		if (!fileStructure || !Array.isArray(fileStructure)) {
 			return 0;
 		}
@@ -153,16 +191,10 @@ const Dashboard = () => {
 						<div className="repository-actions">
 							<button
 								className="generate-button"
-								onClick={() => {
-									// In a full implementation, this would generate documentation
-									console.log(
-										"Generate documentation for:",
-										repository
-									);
-								}}
-								disabled={isLoading}
+								onClick={generateDocumentation}
+								disabled={isGeneratingDoc}
 							>
-								{isLoading
+								{isGeneratingDoc
 									? "Processing..."
 									: "Generate Documentation"}
 							</button>
@@ -170,7 +202,7 @@ const Dashboard = () => {
 							<button
 								className="reset-button"
 								onClick={resetConnection}
-								disabled={isLoading}
+								disabled={isLoading || isGeneratingDoc}
 							>
 								Connect Different Repository
 							</button>
