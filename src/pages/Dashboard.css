@@ -1,218 +1,269 @@
-.dashboard-container {
-	max-width: 1000px;
-	margin: 0 auto;
-	padding: 2rem;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-		"Helvetica Neue", Arial, sans-serif;
+/* Add these styles to your Dashboard.css file */
+
+/* Chat Message Styles */
+.chat-message {
+	max-width: 100%;
+	word-wrap: break-word;
 }
 
-.dashboard-content {
-	background-color: #fff;
-	border-radius: 10px;
-	padding: 2rem;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+.chat-message pre {
+	background-color: #f7fafc;
+	border-radius: 4px;
+	padding: 8px;
+	margin: 8px 0;
+	overflow-x: auto;
 }
 
-.dashboard-content h1 {
-	font-size: 2.5rem;
-	color: #2c3e50;
-	margin-top: 0;
-	margin-bottom: 1rem;
-	text-align: center;
+.chat-message code {
+	background-color: #edf2f7;
+	padding: 2px 4px;
+	border-radius: 3px;
+	font-size: 14px;
 }
 
-.dashboard-description {
-	text-align: center;
-	font-size: 1.1rem;
-	color: #7f8c8d;
-	max-width: 800px;
-	margin: 0 auto 2.5rem;
+.chat-message ul,
+.chat-message ol {
+	padding-left: 20px;
+	margin: 8px 0;
+}
+
+.chat-message li {
+	margin: 4px 0;
+}
+
+/* Chat input focus styles */
+.chat-input:focus {
+	border-color: #3182ce;
+	box-shadow: 0 0 0 1px #3182ce;
+}
+
+/* File explorer improvements */
+.file-explorer {
+	font-size: 14px;
+}
+
+.file-tree ul {
+	list-style: none;
+	padding-left: 16px;
+	margin: 0;
+}
+
+.file-tree .directory-item > .directory-name {
+	margin-bottom: 4px;
+	font-weight: 500;
+	color: #4a5568;
+}
+
+.file-tree .file-button {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	padding: 4px 8px;
+	background: none;
+	border: none;
+	text-align: left;
+	border-radius: 4px;
+	transition: background-color 0.2s;
+	cursor: pointer;
+}
+
+.file-tree .file-button:hover {
+	background-color: #e2e8f0;
+}
+
+.file-tree .file-button.selected {
+	background-color: #3182ce;
+	color: white;
+}
+
+.file-tree .icon {
+	margin-right: 8px;
+}
+
+/* Documentation content improvements */
+.file-documentation {
 	line-height: 1.6;
 }
 
-/* Repository connection form */
-.repository-connection {
-	max-width: 700px;
-	margin: 0 auto 3rem;
-	padding: 1.5rem;
-	background-color: #f8f9fa;
+.file-documentation .file-path {
+	font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+	background-color: #f7fafc;
+	padding: 8px 12px;
+	border-radius: 6px;
+	font-weight: normal;
+	font-size: 16px;
+}
+
+.file-documentation .doc-section {
+	margin-bottom: 24px;
+}
+
+.file-documentation .doc-section h3 {
+	color: #2d3748;
+	margin-bottom: 8px;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.file-documentation .component-doc {
+	background-color: #f7fafc;
 	border-radius: 8px;
-	border: 1px solid #e9ecef;
+	padding: 16px;
+	margin-bottom: 16px;
+	border-left: 4px solid #3182ce;
 }
 
-.repository-connection h2 {
-	margin-top: 0;
-	color: #2c3e50;
-	font-size: 1.5rem;
-	margin-bottom: 1rem;
+.file-documentation .component-doc h4 {
+	color: #2d3748;
+	margin-bottom: 8px;
+	font-size: 16px;
+	font-weight: 600;
 }
 
-.input-group {
-	display: flex;
-	margin-bottom: 1rem;
+.file-documentation .component-type {
+	color: #718096;
+	font-weight: normal;
+	font-size: 14px;
 }
 
-.repo-input {
-	flex: 1;
-	padding: 0.75rem 1rem;
-	font-size: 1rem;
-	border: 1px solid #ddd;
-	border-radius: 4px 0 0 4px;
-	outline: none;
+.file-documentation .params,
+.file-documentation .returns,
+.file-documentation .examples {
+	margin-top: 12px;
 }
 
-.repo-input:focus {
-	border-color: #4a90e2;
-	box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+.file-documentation .params h5,
+.file-documentation .returns h5,
+.file-documentation .examples h5 {
+	font-size: 14px;
+	font-weight: 600;
+	color: #4a5568;
+	margin-bottom: 6px;
 }
 
-.error-message {
-	color: #e74c3c;
-	font-size: 0.9rem;
-	margin-top: 0.5rem;
-	padding: 0.5rem;
-	background-color: rgba(231, 76, 60, 0.1);
-	border-radius: 4px;
+.file-documentation .param-type,
+.file-documentation .return-type {
+	color: #805ad5;
+	font-weight: 500;
 }
 
-/* Repository info styling */
-.repository-info {
-	max-width: 700px;
-	margin: 0 auto 3rem;
-	padding: 1.5rem;
-	background-color: #f8f9fa;
+.file-documentation .code-example {
+	background-color: #2d3748;
+	color: #e2e8f0;
+	padding: 12px;
+	border-radius: 6px;
+	font-size: 14px;
+	overflow-x: auto;
+}
+
+.file-documentation .error-message {
+	background-color: #fed7d7;
+	color: #c53030;
+	padding: 12px;
 	border-radius: 8px;
-	border: 1px solid #e9ecef;
+	border: 1px solid #feb2b2;
 }
 
-.repository-info h2 {
-	margin-top: 0;
-	color: #2c3e50;
-	font-size: 1.5rem;
-	margin-bottom: 1rem;
-	padding-bottom: 0.5rem;
-	border-bottom: 1px solid #e9ecef;
+/* Repository summary styles */
+.repository-summary .doc-section {
+	margin-bottom: 20px;
 }
 
-.repository-details {
-	margin-bottom: 1.5rem;
+.repository-summary h2 {
+	color: #2d3748;
+	font-size: 24px;
+	margin-bottom: 16px;
 }
 
-.repository-details p {
-	margin: 0.5rem 0;
-	font-size: 1rem;
-	color: #34495e;
+.repository-summary h3 {
+	color: #4a5568;
+	font-size: 18px;
+	margin-bottom: 8px;
+	font-weight: 600;
 }
 
-.repository-details strong {
-	color: #2c3e50;
-	margin-right: 0.5rem;
+/* Full markdown view styles */
+.full-markdown {
+	max-width: none;
 }
 
-.repository-actions {
-	display: flex;
-	gap: 1rem;
-	flex-wrap: wrap;
+.full-markdown h1,
+.full-markdown h2,
+.full-markdown h3,
+.full-markdown h4,
+.full-markdown h5,
+.full-markdown h6 {
+	color: #2d3748;
+	margin-top: 24px;
+	margin-bottom: 12px;
 }
 
-/* Buttons */
-.generate-button {
-	padding: 0.75rem 1.5rem;
-	background-color: #4a90e2;
-	color: white;
-	font-size: 1rem;
-	font-weight: bold;
-	border: none;
-	border-radius: 0 4px 4px 0;
-	cursor: pointer;
-	transition: background-color 0.2s;
+.full-markdown h1 {
+	font-size: 32px;
+	border-bottom: 2px solid #e2e8f0;
+	padding-bottom: 8px;
 }
 
-.repository-actions .generate-button {
-	border-radius: 4px;
+.full-markdown h2 {
+	font-size: 24px;
 }
 
-.generate-button:hover {
-	background-color: #3a80d2;
+.full-markdown h3 {
+	font-size: 20px;
 }
 
-.generate-button:disabled {
-	background-color: #a0c1e8;
-	cursor: not-allowed;
+.full-markdown code {
+	background-color: #f7fafc;
+	padding: 2px 4px;
+	border-radius: 3px;
+	font-size: 14px;
 }
 
-.reset-button {
-	padding: 0.75rem 1.5rem;
-	background-color: #ecf0f1;
-	color: #34495e;
-	font-size: 1rem;
-	font-weight: bold;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	transition: background-color 0.2s;
-}
-
-.reset-button:hover {
-	background-color: #dfe6e9;
-}
-
-.reset-button:disabled {
-	background-color: #f5f6f7;
-	color: #95a5a6;
-	cursor: not-allowed;
-}
-
-/* Features section */
-.dashboard-features {
-	margin-top: 3rem;
-	padding: 1.5rem;
-	background-color: #f8f9fa;
+.full-markdown pre {
+	background-color: #2d3748;
+	color: #e2e8f0;
+	padding: 16px;
 	border-radius: 8px;
-	border: 1px solid #e9ecef;
+	overflow-x: auto;
+	margin: 16px 0;
 }
 
-.dashboard-features h2 {
-	color: #2c3e50;
-	margin-top: 0;
-	margin-bottom: 1rem;
-	font-size: 1.5rem;
+.full-markdown pre code {
+	background: none;
+	padding: 0;
+	color: inherit;
 }
 
-.dashboard-features ul {
-	padding-left: 1.5rem;
-	margin-bottom: 0;
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-	gap: 0.5rem;
+.full-markdown blockquote {
+	border-left: 4px solid #3182ce;
+	padding-left: 16px;
+	margin: 16px 0;
+	font-style: italic;
+	color: #4a5568;
 }
 
-.dashboard-features li {
-	color: #34495e;
-	margin-bottom: 0.5rem;
+.full-markdown ul,
+.full-markdown ol {
+	padding-left: 24px;
+	margin: 12px 0;
+}
+
+.full-markdown li {
+	margin: 4px 0;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-	.dashboard-features ul {
-		grid-template-columns: 1fr;
+	.file-tree {
+		font-size: 13px;
 	}
 
-	.repository-actions {
-		flex-direction: column;
+	.file-documentation .file-path {
+		font-size: 14px;
+		word-break: break-all;
 	}
 
-	.input-group {
-		flex-direction: column;
-	}
-
-	.repo-input,
-	.generate-button {
-		width: 100%;
-		border-radius: 4px;
-	}
-
-	.repo-input {
-		margin-bottom: 0.5rem;
+	.file-documentation .component-doc {
+		padding: 12px;
 	}
 }

@@ -1,14 +1,15 @@
-:root {
-	--primary-color: #4a90e2;
-	--text-color: #333;
-	--background-color: #f8f9fa;
-	--border-color: #e9ecef;
-}
-
 * {
 	box-sizing: border-box;
 	margin: 0;
 	padding: 0;
+}
+
+/* Add these styles to your app.css file */
+.app {
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 20px;
 }
 
 body {
@@ -16,6 +17,13 @@ body {
 		Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 	line-height: 1.5;
 	color: var(--text-color);
+	background-color: var(--chakra-colors-gray-50);
+	display: flex;
+	justify-content: center;
+}
+
+#root {
+	width: 100%;
 }
 
 button {

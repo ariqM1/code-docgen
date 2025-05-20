@@ -488,7 +488,6 @@ async function generateRepositoryDocumentation(repo, fileStructure) {
 	}
 }
 
-// Convert documentation to markdown
 function convertToMarkdown(documentation) {
 	let markdown = `# ${documentation.repository.owner}/${documentation.repository.name}\n\n`;
 
@@ -617,6 +616,185 @@ function convertToMarkdown(documentation) {
 	return markdown;
 }
 
+// Helper function to find relevant files based on the user's message
+function findRelevantFiles(message, documentedFiles) {
+	if (!documentedFiles) {
+		console.log("Warning: documentedFiles is undefined or null");
+		return [];
+	}
+
+	const messageLower = message.toLowerCase();
+
+	// Extract keywords from the message
+	const keywords = extractKeywords(messageLower);
+	console.log("Extracted keywords:", keywords);
+
+	// Score each file based on relevance
+	const fileScores = Object.entries(documentedFiles).map(
+		([filePath, fileDoc]) => {
+			let score = 0;
+
+			// Check if file path is mentioned directly
+			if (messageLower.includes(filePath.toLowerCase())) {
+				score += 10;
+			}
+
+			// Check file name
+			const fileName = filePath.split("/").pop();
+			if (messageLower.includes(fileName.toLowerCase())) {
+				score += 8;
+			}
+
+			// Check documentation content
+			try {
+				const docContent = [
+					fileDoc.overview || "",
+					fileDoc.purpose || "",
+					...(fileDoc.dependencies || []),
+					...(fileDoc.components || []).map(
+						(comp) =>
+							`${comp.name} ${comp.description} ${(
+								comp.params || []
+							)
+								.map((p) => p.name)
+								.join(" ")}`
+					),
+					fileDoc.notes || "",
+				]
+					.join(" ")
+					.toLowerCase();
+
+				// Score based on keyword matches
+				keywords.forEach((keyword) => {
+					if (docContent.includes(keyword)) {
+						score += 2;
+					}
+				});
+			} catch (err) {
+				console.log(`Error processing file ${filePath}:`, err.message);
+			}
+
+			// Boost score for certain file types based on question type
+			if (isDebuggingQuestion(messageLower) && filePath.includes(".js")) {
+				score += 3;
+			}
+
+			return { filePath, fileDoc, score };
+		}
+	);
+
+	// Sort by score and take top 3 most relevant files
+	const relevantFiles = fileScores
+		.sort((a, b) => b.score - a.score)
+		.slice(0, 3)
+		.filter((item) => item.score > 0)
+		.map((item) => ({ path: item.filePath, doc: item.fileDoc }));
+
+	return relevantFiles;
+}
+
+// Helper function to extract keywords from message
+function extractKeywords(message) {
+	// Remove common stop words and extract meaningful terms
+	const stopWords = [
+		"the",
+		"is",
+		"at",
+		"which",
+		"on",
+		"how",
+		"what",
+		"why",
+		"where",
+		"when",
+		"can",
+		"could",
+		"would",
+		"should",
+	];
+	return message
+		.split(/\s+/)
+		.filter((word) => word.length > 2 && !stopWords.includes(word))
+		.filter((word) => /^[a-zA-Z0-9_.-]+$/.test(word));
+}
+
+// Helper function to detect debugging questions
+function isDebuggingQuestion(message) {
+	const debugPatterns = [
+		"debug",
+		"error",
+		"bug",
+		"issue",
+		"problem",
+		"fix",
+		"broken",
+		"not working",
+		"failing",
+		"exception",
+		"crash",
+	];
+	return debugPatterns.some((pattern) => message.includes(pattern));
+}
+
+// Helper function to create the chat prompt
+function createChatPrompt(
+	userMessage,
+	repoContext,
+	relevantFiles,
+	conversationContext
+) {
+	let prompt = `You are a helpful AI assistant specialized in explaining and helping with code repositories. You have access to comprehensive documentation about the repository.
+
+Repository: ${repoContext.name}
+${repoContext.description ? `Description: ${repoContext.description}` : ""}
+
+Repository Summary:
+${repoContext.summary ? repoContext.summary.summary : "No summary available"}
+
+Technologies used: ${
+		repoContext.summary?.technologies
+			? repoContext.summary.technologies.join(", ")
+			: "Not specified"
+	}
+Main components: ${
+		repoContext.summary?.mainComponents
+			? repoContext.summary.mainComponents.join(", ")
+			: "Not specified"
+	}
+
+Available files in the repository: ${repoContext.files.join(", ")}`;
+
+	// Add relevant file documentation if found
+	if (relevantFiles && relevantFiles.length > 0) {
+		prompt += "\n\nRelevant file documentation:\n";
+		relevantFiles.forEach((file) => {
+			prompt += `\n--- ${file.path} ---\n`;
+			prompt += `Overview: ${file.doc.overview || "No overview"}\n`;
+			if (file.doc.purpose) prompt += `Purpose: ${file.doc.purpose}\n`;
+			if (file.doc.dependencies && file.doc.dependencies.length > 0) {
+				prompt += `Dependencies: ${file.doc.dependencies.join(", ")}\n`;
+			}
+			if (file.doc.components && file.doc.components.length > 0) {
+				prompt += "Components:\n";
+				file.doc.components.slice(0, 3).forEach((comp) => {
+					prompt += `- ${comp.name} (${comp.type}): ${comp.description}\n`;
+				});
+			}
+		});
+	}
+
+	// Add conversation context
+	prompt += conversationContext;
+
+	prompt += `\n\nUser question: ${userMessage}
+
+Please provide a helpful, accurate response based on the repository documentation. If the question is about debugging or solving issues, provide specific guidance. If asked about specific files or functions, reference the relevant documentation. Keep your response concise but informative.
+
+Response:`;
+
+	return prompt;
+}
+
 // API endpoint to test Bedrock connection
 app.post("/api/test-bedrock", async (req, res) => {
 	try {
@@ -647,6 +825,246 @@ app.post("/api/test-bedrock", async (req, res) => {
 		});
 	} catch (error) {
 		console.error("Error testing Bedrock connection:", error.message);
+		res.status(500).json({
+			success: false,
+			error: error.message,
+		});
+	}
+});
+
+app.post("/api/chat-about-repository", async (req, res) => {
+	console.log("=== Chat Request Received ===");
+	console.log("Headers:", req.headers);
+	console.log("Body keys:", Object.keys(req.body));
+	console.log(
+		"Body types:",
+		Object.keys(req.body).map((key) => `${key}: ${typeof req.body[key]}`)
+	);
+
+	try {
+		const { message, repository, documentation, conversationHistory } =
+			req.body;
+
+		// Detailed validation with logging
+		console.log("=== Parameter Validation ===");
+		console.log("Message:", message ? "✓ Present" : "✗ Missing");
+		console.log("Repository:", repository ? "✓ Present" : "✗ Missing");
+		console.log(
+			"Documentation:",
+			documentation ? "✓ Present" : "✗ Missing"
+		);
+
+		if (repository) {
+			console.log("Repository details:", {
+				owner: repository.owner,
+				name: repository.name,
+			});
+		}
+
+		if (documentation && documentation.files) {
+			console.log(
+				"Documentation files count:",
+				Object.keys(documentation.files).length
+			);
+		}
+
+		if (!message || !repository || !documentation) {
+			const missingParams = [];
+			if (!message) missingParams.push("message");
+			if (!repository) missingParams.push("repository");
+			if (!documentation) missingParams.push("documentation");
+
+			console.error("Missing parameters:", missingParams);
+			return res.status(400).json({
+				success: false,
+				error: `Missing required parameters: ${missingParams.join(
+					", "
+				)}`,
+			});
+		}
+
+		console.log(
+			`Processing chat request for ${repository.owner}/${repository.name}`
+		);
+		console.log(`User message: "${message}"`);
+
+		// Check if bedrockClient is initialized
+		if (!bedrockClient) {
+			console.error("❌ Bedrock client not initialized");
+			return res.status(500).json({
+				success: false,
+				error: "Bedrock client not initialized",
+			});
+		}
+
+		console.log("✓ Bedrock client is initialized");
+		console.log("✓ Model ID:", modelId);
+
+		// Prepare context about the repository
+		const repoContext = {
+			name: `${repository.owner}/${repository.name}`,
+			description: documentation.repository.description,
+			summary: documentation.summary,
+			files: Object.keys(documentation.files),
+			generatedOn: documentation.generated,
+		};
+
+		console.log("=== Repository Context ===");
+		console.log("Files available:", repoContext.files.length);
+
+		// Build conversation context from history
+		let conversationContext = "";
+		if (conversationHistory && conversationHistory.length > 0) {
+			conversationContext = "\n\nRecent conversation:\n";
+			conversationHistory.slice(-6).forEach((msg) => {
+				conversationContext += `${
+					msg.role === "user" ? "User" : "Assistant"
+				}: ${msg.content}\n`;
+			});
+			console.log(
+				"✓ Conversation history included, messages:",
+				conversationHistory.length
+			);
+		}
+
+		// Determine which files are relevant to the query
+		const relevantFiles = findRelevantFiles(message, documentation.files);
+		console.log("✓ Relevant files found:", relevantFiles.length);
+		relevantFiles.forEach((file) => console.log(`  - ${file.path}`));
+
+		// Create the chat prompt
+		const prompt = createChatPrompt(
+			message,
+			repoContext,
+			relevantFiles,
+			conversationContext
+		);
+		console.log("✓ Prompt created, length:", prompt.length);
+
+		// Call Claude using Bedrock
+		console.log("=== Calling Claude via Bedrock ===");
+		const input = {
+			modelId: modelId,
+			contentType: "application/json",
+			accept: "application/json",
+			body: JSON.stringify({
+				anthropic_version: "bedrock-2023-05-31",
+				max_tokens: 1500,
+				messages: [{ role: "user", content: prompt }],
+			}),
+		};
+
+		console.log("Bedrock input prepared, calling API...");
+		const command = new InvokeModelCommand(input);
+		const response = await bedrockClient.send(command);
+
+		console.log("✓ Bedrock API call successful");
+		console.log("Response status:", response.$metadata?.httpStatusCode);
+
+		const responseBody = JSON.parse(
+			new TextDecoder().decode(response.body)
+		);
+
+		console.log("✓ Response body parsed");
+		console.log("Response content type:", typeof responseBody.content);
+		console.log(
+			"Response content length:",
+			responseBody.content ? responseBody.content.length : 0
+		);
+
+		if (
+			!responseBody.content ||
+			!responseBody.content[0] ||
+			!responseBody.content[0].text
+		) {
+			console.error("❌ Invalid response structure from Claude");
+			console.error(
+				"Response body:",
+				JSON.stringify(responseBody, null, 2)
+			);
+			return res.status(500).json({
+				success: false,
+				error: "Invalid response from AI service",
+			});
+		}
+
+		const reply = responseBody.content[0].text;
+		console.log("✓ Reply extracted, length:", reply.length);
+		console.log("Reply preview:", reply.substring(0, 100) + "...");
+
+		res.json({
+			success: true,
+			reply: reply.trim(),
+		});
+
+		console.log("=== Chat Request Completed Successfully ===");
+	} catch (error) {
+		console.error("=== ERROR in Chat Endpoint ===");
+		console.error("Error type:", error.constructor.name);
+		console.error("Error message:", error.message);
+		console.error("Error stack:", error.stack);
+
+		// Check for specific AWS/Bedrock errors
+		if (error.name === "ValidationException") {
+			console.error(
+				"❌ Bedrock Validation Error - Check your model ID and parameters"
+			);
+		} else if (error.name === "AccessDeniedException") {
+			console.error(
+				"❌ Bedrock Access Denied - Check your AWS credentials and permissions"
+			);
+		} else if (error.name === "ThrottlingException") {
+			console.error("❌ Bedrock Throttling - Too many requests");
+		} else if (error.code === "NetworkError") {
+			console.error("❌ Network Error - Check your internet connection");
+		}
+
+		res.status(500).json({
+			success: false,
+			error: `Chat processing failed: ${error.message}`,
+			errorType: error.constructor.name,
+		});
+	}
+});
+
+// Also add this test endpoint to verify Bedrock connection
+app.post("/api/test-chat", async (req, res) => {
+	try {
+		console.log("=== Testing Bedrock Connection ===");
+
+		if (!bedrockClient) {
+			return res.status(500).json({
+				success: false,
+				error: "Bedrock client not initialized",
+			});
+		}
+
+		const input = {
+			modelId: modelId,
+			contentType: "application/json",
+			accept: "application/json",
+			body: JSON.stringify({
+				anthropic_version: "bedrock-2023-05-31",
+				max_tokens: 100,
+				messages: [{ role: "user", content: "Say hello" }],
+			}),
+		};
+
+		console.log("Making test call to Bedrock...");
+		const command = new InvokeModelCommand(input);
+		const response = await bedrockClient.send(command);
+		const responseBody = JSON.parse(
+			new TextDecoder().decode(response.body)
+		);
+
+		console.log("✓ Bedrock test successful");
+		res.json({
+			success: true,
+			message: "Bedrock connection working",
+			reply: responseBody.content[0].text,
+		});
+	} catch (error) {
+		console.error("❌ Bedrock test failed:", error);
 		res.status(500).json({
 			success: false,
 			error: error.message,
