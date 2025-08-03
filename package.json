@@ -4,12 +4,12 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "vite",
-		"build": "tsc -b && vite build",
-		"server": "node server/server.js",
+		"dev": "cd frontend && vite",
+		"build": "cd frontend && tsc -b && vite build",
+		"server": "node backend/node-api/server.js",
 		"dev:all": "concurrently \"npm run dev\" \"npm run server\"",
-		"lint": "eslint .",
-		"preview": "vite preview"
+		"lint": "cd frontend && eslint .",
+		"preview": "cd frontend && vite preview"
 	},
 	"dependencies": {
 		"@aws-sdk/client-bedrock-runtime": "^3.804.0",
@@ -47,7 +47,7 @@
 		"vite": "^6.3.5"
 	},
 	"description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
-	"main": "eslint.config.js",
+	"main": "frontend/eslint.config.js",
 	"keywords": [],
 	"author": "",
 	"license": "ISC"

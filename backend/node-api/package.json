@@ -1,0 +1,22 @@
+{
+	"name": "code-docgen-node-api",
+	"version": "1.0.0",
+	"type": "module",
+	"description": "Node.js API server for code documentation generation",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js",
+		"dev": "node --watch server.js",
+		"test": "node ../tests/test-bedrock.js"
+	},
+	"dependencies": {
+		"@aws-sdk/client-bedrock-runtime": "^3.804.0",
+		"@aws-sdk/credential-providers": "^3.804.0",
+		"@langchain/anthropic": "^0.3.20",
+		"@langchain/community": "^0.3.42",
+		"compression": "^1.8.0",
+		"cors": "^2.8.5",
+		"express": "^5.1.0",
+		"langchain": "^0.3.24"
+	}
+}

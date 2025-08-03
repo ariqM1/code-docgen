@@ -6,94 +6,24 @@ import {
 	Flex,
 	Heading,
 	HStack,
-	IconButton,
 	Input,
-	Spinner,
 	Text,
-	useDisclosure,
 	VStack,
 } from "@chakra-ui/react";
 import axios, { AxiosError } from "axios";
-import { useEffect, useRef, useState } from "react";
-import { BsArrowUp, BsChatDots, BsX } from "react-icons/bs";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import "./Dashboard.css"; // You'll need to create this for the documentation styles
+import ChatBot from "../component/ChatBot";
+import type { 
+	Repository, 
+	Documentation, 
+	DocumentationFile, 
+	FileNode, 
+	ViewMode,
+	ApiErrorResponse 
+} from "../types";
+import "./Dashboard.css";
 
-// Define TypeScript interfaces
-interface FileNode {
-	path: string;
-	type: "file" | "directory";
-	children?: FileNode[];
-}
-
-interface Repository {
-	owner: string;
-	name: string;
-	url: string;
-	description: string | null;
-	defaultBranch: string;
-	fileStructure: FileNode[];
-}
-
-interface DocumentationFile {
-	overview: string;
-	purpose: string;
-	dependencies: string[];
-	components: {
-		name: string;
-		type: string;
-		description: string;
-		params?: { name: string; type: string; description: string }[];
-		returns?: { type: string; description: string };
-		examples?: string[];
-	}[];
-	notes?: string;
-	metadata: {
-		filePath: string;
-		fileType: string;
-		generatedAt: string;
-		repositoryInfo: {
-			owner: string;
-			name: string;
-			branch: string;
-		};
-	};
-	error?: string;
-}
-
-interface RepositorySummary {
-	summary: string;
-	mainComponents?: string[];
-	architecture?: string;
-	technologies?: string[];
-	useCases?: string[];
-}
-
-interface Documentation {
-	json: {
-		repository: {
-			owner: string;
-			name: string;
-			description: string;
-			defaultBranch: string;
-		};
-		generated: string;
-		files: Record<string, DocumentationFile>;
-		summary: RepositorySummary | null;
-	};
-	markdown: string;
-}
-
-interface ApiErrorResponse {
-	error: string;
-}
-
-interface ChatMessage {
-	id: string;
-	role: "user" | "assistant";
-	content: string;
-	timestamp: Date;
-}
 
 const Dashboard = () => {
 	// State for repository connection
@@ -110,16 +40,7 @@ const Dashboard = () => {
 	const [selectedFilePath, setSelectedFilePath] = useState<string | null>(
 		null
 	);
-	const [viewMode, setViewMode] = useState<
-		"summary" | "file" | "fullMarkdown"
-	>("summary");
-
-	// Chatbot state
-	const { open: isOpen, onOpen, onClose } = useDisclosure();
-	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-	const [newMessage, setNewMessage] = useState<string>("");
-	const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
-	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const [viewMode, setViewMode] = useState<ViewMode>("summary");
 
 	// Background colors
 	const bgColor = "gray.50";
@@ -127,13 +48,6 @@ const Dashboard = () => {
 	// API client configuration
 	const API_URL =
 		process.env.REACT_APP_API_URL || "http://localhost:4000/api";
-
-	// Scroll to bottom of chat messages
-	const scrollToBottom = () => {
-		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-	};
-
-	useEffect(scrollToBottom, [chatMessages]);
 
 	// Connect to GitHub repository
 	const connectToRepository = async (e: React.FormEvent) => {
@@ -207,24 +121,6 @@ const Dashboard = () => {
 					`documentation_${repository.owner}_${repository.name}`,
 					JSON.stringify(response.data.documentation)
 				);
-
-				// Add initial welcome message to chat
-				setChatMessages([
-					{
-						id: "1",
-						role: "assistant",
-						content: `Hi! I'm your repository assistant. I've analyzed the documentation for ${repository.owner}/${repository.name}. You can ask me questions about:
-
-- Code structure and architecture
-- How specific functions or components work
-- Dependencies and their usage
-- Debugging help for specific files
-- Best practices and recommendations
-
-What would you like to know?`,
-						timestamp: new Date(),
-					},
-				]);
 			} else {
 				throw new Error(
 					response.data.error || "Failed to generate documentation"
@@ -243,65 +139,6 @@ What would you like to know?`,
 		}
 	};
 
-	// Send chat message
-	const sendChatMessage = async (e: React.FormEvent) => {
-		e.preventDefault();
-
-		if (!newMessage.trim() || !documentation || !repository) return;
-
-		const userMessage: ChatMessage = {
-			id: Date.now().toString(),
-			role: "user",
-			content: newMessage,
-			timestamp: new Date(),
-		};
-
-		setChatMessages((prev) => [...prev, userMessage]);
-		setNewMessage("");
-		setIsChatLoading(true);
-
-		try {
-			const response = await axios.post(
-				`${API_URL}/chat-about-repository`,
-				{
-					message: newMessage,
-					repository: {
-						owner: repository.owner,
-						name: repository.name,
-					},
-					documentation: documentation.json,
-					conversationHistory: chatMessages.slice(-10), // Send last 10 messages for context
-				}
-			);
-
-			if (response.data.success) {
-				const assistantMessage: ChatMessage = {
-					id: (Date.now() + 1).toString(),
-					role: "assistant",
-					content: response.data.reply,
-					timestamp: new Date(),
-				};
-
-				setChatMessages((prev) => [...prev, assistantMessage]);
-			} else {
-				throw new Error(
-					response.data.error || "Failed to get response"
-				);
-			}
-		} catch (error) {
-			console.error("Error sending chat message:", error);
-			const assistantMessage: ChatMessage = {
-				id: (Date.now() + 1).toString(),
-				role: "assistant",
-				content:
-					"Sorry, I encountered an error processing your request. Please try again.",
-				timestamp: new Date(),
-			};
-			setChatMessages((prev) => [...prev, assistantMessage]);
-		} finally {
-			setIsChatLoading(false);
-		}
-	};
 
 	// Reset connection to try another repository
 	const resetConnection = () => {
@@ -309,8 +146,6 @@ What would you like to know?`,
 		setDocumentation(null);
 		setSelectedFilePath(null);
 		setRepoUrl("");
-		setChatMessages([]);
-		onClose();
 		// Clear from session storage
 		sessionStorage.removeItem("repository");
 		if (repository) {
@@ -794,20 +629,10 @@ What would you like to know?`,
 							overflow="hidden"
 						>
 							<Box p={6} borderBottomWidth="1px">
-								<Flex align="center" justify="space-between">
-									<Heading as="h2" size="md">
-										Documentation: {repository?.owner}/
-										{repository?.name}
-									</Heading>
-									<IconButton
-										aria-label="Open repository assistant"
-										icon={<BsChatDots />}
-										colorScheme="blue"
-										variant="outline"
-										size="lg"
-										onClick={onOpen}
-									/>
-								</Flex>
+								<Heading as="h2" size="md">
+									Documentation: {repository?.owner}/
+									{repository?.name}
+								</Heading>
 							</Box>
 
 							<Flex
@@ -920,215 +745,8 @@ What would you like to know?`,
 				</VStack>
 			</Container>
 
-			{/* Chatbot Modal */}
-			{isOpen && (
-				<Box
-					position="fixed"
-					top="0"
-					left="0"
-					right="0"
-					bottom="0"
-					bg="blackAlpha.600"
-					display="flex"
-					alignItems="center"
-					justifyContent="center"
-					zIndex="overlay"
-				>
-					<Box
-						bg="white"
-						borderRadius="md"
-						boxShadow="xl"
-						maxW="600px"
-						w="full"
-						h="80vh"
-						m={4}
-						display="flex"
-						flexDirection="column"
-					>
-						{/* Chat Header */}
-						<Box p={4} borderBottomWidth="1px">
-							<Flex align="center" justify="space-between">
-								<HStack>
-									<Box
-										w={8}
-										h={8}
-										bg="blue.500"
-										borderRadius="full"
-										display="flex"
-										alignItems="center"
-										justifyContent="center"
-										color="white"
-										fontSize="sm"
-									>
-										🤖
-									</Box>
-									<Text fontWeight="bold">
-										Repository Assistant
-									</Text>
-								</HStack>
-								<IconButton
-									aria-label="Close chat"
-									icon={<BsX />}
-									size="sm"
-									onClick={onClose}
-								/>
-							</Flex>
-						</Box>
-
-						{/* Chat Messages */}
-						<Box flex="1" p={4} overflowY="auto" bg="gray.50">
-							{chatMessages.length === 0 ? (
-								<Text
-									color="gray.500"
-									textAlign="center"
-									mt={8}
-								>
-									Start a conversation about the repository!
-								</Text>
-							) : (
-								<VStack spacing={3} align="stretch">
-									{chatMessages.map((message) => (
-										<Box key={message.id}>
-											<HStack
-												justify={
-													message.role === "user"
-														? "flex-end"
-														: "flex-start"
-												}
-												mb={1}
-											>
-												{message.role ===
-													"assistant" && (
-													<Box
-														w={6}
-														h={6}
-														bg="blue.500"
-														borderRadius="full"
-														display="flex"
-														alignItems="center"
-														justifyContent="center"
-														color="white"
-														fontSize="xs"
-													>
-														🤖
-													</Box>
-												)}
-												<Box
-													bg={
-														message.role === "user"
-															? "blue.500"
-															: "white"
-													}
-													color={
-														message.role === "user"
-															? "white"
-															: "black"
-													}
-													px={3}
-													py={2}
-													borderRadius="lg"
-													maxW="80%"
-													boxShadow="sm"
-												>
-													{message.role ===
-													"assistant" ? (
-														<ReactMarkdown>
-															{message.content}
-														</ReactMarkdown>
-													) : (
-														<Text>
-															{message.content}
-														</Text>
-													)}
-												</Box>
-												{message.role === "user" && (
-													<Box
-														w={6}
-														h={6}
-														bg="gray.500"
-														borderRadius="full"
-														display="flex"
-														alignItems="center"
-														justifyContent="center"
-														color="white"
-														fontSize="xs"
-													>
-														👤
-													</Box>
-												)}
-											</HStack>
-											<Text
-												fontSize="xs"
-												color="gray.500"
-												textAlign={
-													message.role === "user"
-														? "right"
-														: "left"
-												}
-												px={10}
-											>
-												{message.timestamp.toLocaleTimeString()}
-											</Text>
-										</Box>
-									))}
-									{isChatLoading && (
-										<HStack>
-											<Box
-												w={6}
-												h={6}
-												bg="blue.500"
-												borderRadius="full"
-												display="flex"
-												alignItems="center"
-												justifyContent="center"
-												color="white"
-												fontSize="xs"
-											>
-												🤖
-											</Box>
-											<Box
-												bg="white"
-												px={3}
-												py={2}
-												borderRadius="lg"
-												boxShadow="sm"
-											>
-												<Spinner size="sm" />
-											</Box>
-										</HStack>
-									)}
-									<div ref={messagesEndRef} />
-								</VStack>
-							)}
-						</Box>
-
-						{/* Chat Input */}
-						<Box p={4} borderTopWidth="1px" bg="white">
-							<form onSubmit={sendChatMessage}>
-								<HStack spacing={2}>
-									<Input
-										value={newMessage}
-										onChange={(e) =>
-											setNewMessage(e.target.value)
-										}
-										placeholder="Ask about the repository..."
-										disabled={isChatLoading}
-									/>
-									<IconButton
-										type="submit"
-										aria-label="Send message"
-										icon={<BsArrowUp />}
-										colorScheme="blue"
-										disabled={
-											!newMessage.trim() || isChatLoading
-										}
-									/>
-								</HStack>
-							</form>
-						</Box>
-					</Box>
-				</Box>
-			)}
+			{/* Chat Bot Component */}
+			<ChatBot repository={repository} documentation={documentation} />
 		</Box>
 	);
 };

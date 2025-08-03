@@ -1,4 +1,5 @@
 import ApiService from "./apiService";
+import type { FileNode } from "../types";
 
 // Interface for file documentation
 export interface FileDocumentation {

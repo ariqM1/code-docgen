@@ -3,6 +3,7 @@ import type {
 	FileDocumentation,
 	RepositoryDocumentation,
 } from "./bedrockService";
+import type { FileNode, Repository } from "../types";
 
 /**
  * API Service for communicating with the backend
@@ -47,7 +48,7 @@ class ApiService {
 	/**
 	 * Connect to a GitHub repository and retrieve its structure
 	 */
-	static async connectToRepository(repoUrl: string): Promise<RepositoryData> {
+	static async connectToRepository(repoUrl: string): Promise<Repository> {
 		try {
 			const response = await apiClient.post("/connect-repository", {
 				repoUrl,
